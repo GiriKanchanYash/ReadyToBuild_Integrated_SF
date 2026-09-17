@@ -1,0 +1,3072 @@
+# Semantic model for Microsoft Fabric AI Skill / Azure OpenAI grounding
+# Database: ReadyToBuild | Schema: information_mart
+version: 1.0
+database: ReadyToBuild
+schema: information_mart
+tables:
+- table_name: asn_in_transit_dt
+  display_name: ASN In-Transit Shipments
+  description: Advance Shipping Notices (ASNs) for inbound purchase order shipments that are currently
+    in transit from suppliers to plants.
+  synonyms:
+  - ASN
+  - Advance Shipping Notice
+  - In-Transit Shipments
+  - Inbound Shipments
+  - Shipment Tracking
+  primary_key:
+  - ASN_ID
+  foreign_keys:
+  - column: SUPPLIER_ID
+    references:
+      table: supplier_summary_dt
+      column: SUPPLIER_ID
+  - column: RECEIVING_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: supplier_summary_dt
+    join: asn_in_transit_dt.SUPPLIER_ID = supplier_summary_dt.SUPPLIER_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: asn_in_transit_dt.RECEIVING_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: ASN_ID
+    display_name: ASN ID
+    datatype: string
+    business_description: Unique identifier of the advance shipping notice.
+    synonyms:
+    - ASN ID
+    - ASN Number
+    - Shipment Notice ID
+  - name: PO_ID
+    display_name: PO ID
+    datatype: string
+    business_description: Identifier of the purchase order this shipment is fulfilling.
+    synonyms:
+    - PO Number
+    - Order Number
+  - name: PO_LINE_ID
+    display_name: PO Line ID
+    datatype: string
+    business_description: Identifier of the specific purchase order line being shipped.
+    synonyms:
+    - PO Line
+    - Order Line
+  - name: SUPPLIER_ID
+    display_name: Supplier ID
+    datatype: string
+    business_description: Unique identifier of the supplier.
+    synonyms:
+    - Supplier ID
+    - Supplier Number
+    - Supplier Key
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: QTY_SHIPPED
+    display_name: Qty Shipped
+    datatype: decimal(38,0)
+    business_description: Quantity of the part shipped by the supplier on this ASN.
+    synonyms:
+    - Shipped Quantity
+    - Qty Shipped
+  - name: UNIT_OF_MEASURE
+    display_name: Unit Of Measure
+    datatype: string
+    business_description: Unit in which the quantity is measured (e.g. EA, KG, L).
+    synonyms:
+    - UOM
+    - Unit
+    - Measure Unit
+  - name: SHIP_DATE
+    display_name: Ship Date
+    datatype: date
+    business_description: Date the shipment left the supplier's facility.
+    synonyms:
+    - Ship Date
+    - Departure Date
+  - name: EXPECTED_ARRIVAL_DATE
+    display_name: Expected Arrival Date
+    datatype: date
+    business_description: Date the shipment is expected to arrive at the receiving plant.
+    synonyms:
+    - ETA
+    - Expected Arrival
+    - Expected Delivery Date
+  - name: CARRIER_NAME
+    display_name: Carrier Name
+    datatype: string
+    business_description: Descriptive name of the associated entity.
+    synonyms:
+    - Name
+    - Title
+  - name: TRACKING_NUMBER
+    display_name: Tracking Number
+    datatype: string
+    business_description: Tracking number issued by the carrier for the shipment.
+    synonyms:
+    - Tracking No
+    - Shipment Tracking Number
+  - name: ASN_STATUS
+    display_name: ASN Status
+    datatype: string
+    business_description: Current status of the advance shipping notice (e.g. In Transit, Delivered, Delayed).
+    synonyms:
+    - Shipment Status
+    - ASN Status
+  - name: RECEIVING_PLANT_ID
+    display_name: Receiving Plant ID
+    datatype: string
+    business_description: Identifier of the plant that will receive the shipment.
+    synonyms:
+    - Receiving Plant
+    - Destination Plant
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - QTY_SHIPPED
+  dimensions:
+  - SUPPLIER_ID
+  - PART_NUMBER
+  - CARRIER_NAME
+  - ASN_STATUS
+  - RECEIVING_PLANT_ID
+  - SHIP_DATE
+  - EXPECTED_ARRIVAL_DATE
+  sample_questions:
+  - Which ASNs are in transit and overdue for arrival?
+  - Show inbound shipments by carrier for the last 7 days.
+  - What quantity of part X is currently in transit to plant Y?
+- table_name: bom_dt
+  display_name: Bill of Materials
+  description: Bill of Materials (BOM) header and component records describing the parent-child part structure,
+    quantities, and effective dates used to build products.
+  synonyms:
+  - BOM
+  - Bill of Materials
+  - Parts List
+  - Product Structure
+  - Component List
+  primary_key:
+  - BOM_ID
+  foreign_keys:
+  - column: MAKE_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: plant_dt
+    join: bom_dt.MAKE_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: BOM_ID
+    display_name: BOM ID
+    datatype: string
+    business_description: Unique identifier of the bill of materials line.
+    synonyms:
+    - BOM ID
+    - BOM Line ID
+  - name: BOM_HEADER_ID
+    display_name: BOM Header ID
+    datatype: string
+    business_description: Identifier of the BOM header this line belongs to.
+    synonyms:
+    - BOM Header
+    - BOM Group ID
+  - name: BOM_VERSION
+    display_name: BOM Version
+    datatype: string
+    business_description: Version of the Bill of Materials.
+    synonyms:
+    - BOM Version
+    - BOM Revision
+  - name: BOM_STATUS
+    display_name: BOM Status
+    datatype: string
+    business_description: Current lifecycle status of the BOM (e.g. Active, Obsolete, Draft).
+    synonyms:
+    - BOM Status
+  - name: PARENT_PART_NUMBER
+    display_name: Parent Part Number
+    datatype: string
+    business_description: Part number of the parent assembly consuming the child component.
+    synonyms:
+    - Parent Part
+    - Assembly Part Number
+  - name: PARENT_PART_DESCRIPTION
+    display_name: Parent Part Description
+    datatype: string
+    business_description: Description of the parent assembly.
+    synonyms:
+    - Parent Part Name
+    - Assembly Description
+  - name: PARENT_PART_TYPE
+    display_name: Parent Part Type
+    datatype: string
+    business_description: Classification of the parent part (e.g. finished good, sub-assembly).
+    synonyms:
+    - Parent Part Category
+  - name: PARENT_PART_REVISION
+    display_name: Parent Part Revision
+    datatype: string
+    business_description: Engineering revision of the parent part.
+    synonyms:
+    - Parent Revision
+  - name: CHILD_PART_NUMBER
+    display_name: Child Part Number
+    datatype: string
+    business_description: Part number of the component consumed by the parent assembly.
+    synonyms:
+    - Component Part Number
+    - Child Part
+  - name: CHILD_PART_DESCRIPTION
+    display_name: Child Part Description
+    datatype: string
+    business_description: Description of the child component.
+    synonyms:
+    - Component Description
+    - Child Part Name
+  - name: CHILD_PART_TYPE
+    display_name: Child Part Type
+    datatype: string
+    business_description: Classification of the child part (e.g. raw material, purchased component).
+    synonyms:
+    - Component Type
+  - name: CHILD_PART_REVISION
+    display_name: Child Part Revision
+    datatype: string
+    business_description: Engineering revision of the child part.
+    synonyms:
+    - Child Revision
+  - name: QTY_REQUIRED
+    display_name: Qty Required
+    datatype: decimal(18,4)
+    business_description: Quantity of the child part required per parent assembly, including scrap.
+    synonyms:
+    - Required Quantity
+    - Qty Required
+  - name: UNIT_OF_MEASURE
+    display_name: Unit Of Measure
+    datatype: string
+    business_description: Unit in which the quantity is measured (e.g. EA, KG, L).
+    synonyms:
+    - UOM
+    - Unit
+    - Measure Unit
+  - name: QTY_PER_ASSEMBLY
+    display_name: Qty Per Assembly
+    datatype: decimal(18,4)
+    business_description: Base quantity of the child part consumed per single unit of the parent assembly.
+    synonyms:
+    - Qty per Assembly
+    - Usage Quantity
+  - name: SCRAP_FACTOR_PCT
+    display_name: Scrap Factor %
+    datatype: decimal(5,2)
+    business_description: Expected scrap percentage applied to the required quantity for this component.
+    synonyms:
+    - Scrap Rate
+    - Scrap Percentage
+  - name: MB_INDICATOR
+    display_name: MB Indicator
+    datatype: string
+    business_description: Make/Buy indicator showing whether the component is manufactured in-house or
+      purchased.
+    synonyms:
+    - Make/Buy Flag
+    - Make or Buy
+  - name: MAKE_PLANT_ID
+    display_name: Make Plant ID
+    datatype: string
+    business_description: Identifier of the plant where the parent assembly is manufactured.
+    synonyms:
+    - Manufacturing Plant
+    - Make Plant
+  - name: BOM_LEVEL
+    display_name: BOM Level
+    datatype: decimal(3,0)
+    business_description: Level of the component within the BOM hierarchy, where 0 is the top-level product.
+    synonyms:
+    - BOM Level
+    - Hierarchy Level
+  - name: ASSEMBLY_LEAD_TIME_DAYS
+    display_name: Assembly Lead Time Days
+    datatype: decimal(5,0)
+    business_description: Number of days required to assemble the parent from this component.
+    synonyms:
+    - Assembly Lead Time
+  - name: EFFECTIVE_DATE
+    display_name: Effective Date
+    datatype: date
+    business_description: Date from which this BOM line becomes effective.
+    synonyms:
+    - Effective Date
+    - Start Date
+  - name: EXPIRY_DATE
+    display_name: Expiry Date
+    datatype: date
+    business_description: Date after which this BOM line is no longer effective.
+    synonyms:
+    - Expiry Date
+    - End Date
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - QTY_REQUIRED
+  - QTY_PER_ASSEMBLY
+  - SCRAP_FACTOR_PCT
+  - ASSEMBLY_LEAD_TIME_DAYS
+  dimensions:
+  - PARENT_PART_NUMBER
+  - CHILD_PART_NUMBER
+  - BOM_STATUS
+  - MAKE_PLANT_ID
+  - BOM_LEVEL
+  sample_questions:
+  - What components are required to build part X?
+  - Show the current BOM version for product Y.
+  - Which parts have the highest scrap factor?
+- table_name: bom_explode_dt
+  display_name: Exploded Bill of Materials
+  description: Multi-level, fully exploded Bill of Materials showing every child component required, directly
+    or indirectly, to build a root product, along with the extended quantity per unit and the level/path
+    in the BOM hierarchy.
+  synonyms:
+  - Exploded BOM
+  - Multi-Level BOM
+  - BOM Explosion
+  - Component Rollup
+  primary_key:
+  - ROOT_PRODUCT
+  - PARENT_PART_NUMBER
+  - CHILD_PART_NUMBER
+  columns:
+  - name: ROOT_PRODUCT
+    display_name: Root Product
+    datatype: string
+    business_description: Top-level finished product for which the BOM was fully exploded.
+    synonyms:
+    - Root Product
+    - Top-Level Product
+    - Finished Good
+  - name: PARENT_PART_NUMBER
+    display_name: Parent Part Number
+    datatype: string
+    business_description: Part number of the immediate parent of the child component in this exploded
+      level.
+    synonyms:
+    - Parent Part
+  - name: CHILD_PART_NUMBER
+    display_name: Child Part Number
+    datatype: string
+    business_description: Part number of the component at this level of the exploded BOM.
+    synonyms:
+    - Component Part Number
+    - Child Part
+  - name: CHILD_PART_DESCRIPTION
+    display_name: Child Part Description
+    datatype: string
+    business_description: Description of the component at this level.
+    synonyms:
+    - Component Description
+  - name: CHILD_PART_TYPE
+    display_name: Child Part Type
+    datatype: string
+    business_description: Classification of the component (e.g. raw material, sub-assembly).
+    synonyms:
+    - Component Type
+  - name: QTY_PER_ASSEMBLY
+    display_name: Qty Per Assembly
+    datatype: decimal(18,4)
+    business_description: Quantity of the component consumed per unit of its immediate parent.
+    synonyms:
+    - Qty per Assembly
+  - name: EXTENDED_QTY
+    display_name: Extended Qty
+    datatype: decimal(18,4)
+    business_description: Total quantity of the component required per single unit of the root product,
+      after multiplying through all BOM levels.
+    synonyms:
+    - Extended Quantity
+    - Rolled-Up Quantity
+    - Total Required Qty
+  - name: BOM_LEVEL
+    display_name: BOM Level
+    datatype: int
+    business_description: Depth of the component within the exploded BOM hierarchy relative to the root
+      product.
+    synonyms:
+    - BOM Level
+    - Explosion Level
+  - name: BOM_PATH
+    display_name: BOM Path
+    datatype: string
+    business_description: Full parent-to-child path describing how the component is nested under the root
+      product.
+    synonyms:
+    - BOM Path
+    - Component Path
+  measures:
+  - QTY_PER_ASSEMBLY
+  - EXTENDED_QTY
+  dimensions:
+  - ROOT_PRODUCT
+  - PARENT_PART_NUMBER
+  - CHILD_PART_NUMBER
+  - BOM_LEVEL
+  sample_questions:
+  - Show the fully exploded BOM for product X.
+  - How many total units of part Y are needed to build one unit of product Z?
+  - What is the BOM path from the root product down to part X?
+- table_name: build_sequence_dt
+  display_name: Build Sequence Plan
+  description: Planned build sequence of parts required for each product by build week and build stage,
+    indicating whether safety stock is being used to cover the requirement.
+  synonyms:
+  - Build Sequence
+  - Build Plan
+  - Production Sequence
+  - Build Schedule
+  primary_key:
+  - SEQUENCE_ID
+  columns:
+  - name: SEQUENCE_ID
+    display_name: Sequence ID
+    datatype: string
+    business_description: Unique identifier of the build sequence record.
+    synonyms:
+    - Sequence ID
+    - Build Sequence Number
+  - name: PRODUCT_ID
+    display_name: Product ID
+    datatype: string
+    business_description: Unique identifier of the product.
+    synonyms:
+    - Product ID
+    - Product Number
+    - Product Key
+  - name: BUILD_WEEK
+    display_name: Build Week
+    datatype: decimal(38,0)
+    business_description: Planning week number in which the part is required for the build.
+    synonyms:
+    - Build Week
+    - Planning Week
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: QTY_REQUIRED
+    display_name: Qty Required
+    datatype: decimal(38,0)
+    business_description: Quantity of the part required for the build in this week/stage.
+    synonyms:
+    - Required Quantity
+  - name: BUILD_STAGE
+    display_name: Build Stage
+    datatype: string
+    business_description: Stage of the build process the requirement applies to (e.g. Kitting, Sub-Assembly,
+      Final Assembly).
+    synonyms:
+    - Build Stage
+    - Production Stage
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: USING_SAFETY_STOCK
+    display_name: Using Safety Stock
+    datatype: boolean
+    business_description: Indicates whether safety stock is being used to cover this build requirement.
+    synonyms:
+    - Uses Safety Stock
+    - Safety Stock Flag
+  measures:
+  - QTY_REQUIRED
+  dimensions:
+  - PRODUCT_ID
+  - PART_NUMBER
+  - BUILD_STAGE
+  - BUILD_WEEK
+  sample_questions:
+  - What parts are required for product X in build week 5?
+  - Which build stages rely on safety stock the most?
+  - Show the build sequence plan for the next 4 weeks.
+- table_name: ctb_result_dt
+  display_name: Capable-to-Build (CTB) Results
+  description: Results of Capable-to-Build (CTB) calculations for work orders, showing how many units
+    can be built from on-hand inventory, scheduled deliveries, and safety stock.
+  synonyms:
+  - CTB
+  - Capable to Build
+  - Buildability Analysis
+  - Build Capability
+  primary_key:
+  - CTB_ID
+  foreign_keys:
+  - column: WORK_ORDER_ID
+    references:
+      table: work_order_dt
+      column: WORK_ORDER_ID
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: work_order_dt
+    join: ctb_result_dt.WORK_ORDER_ID = work_order_dt.WORK_ORDER_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: ctb_result_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: CTB_ID
+    display_name: CTB ID
+    datatype: string
+    business_description: Unique identifier of the Capable-to-Build calculation record.
+    synonyms:
+    - CTB ID
+    - CTB Result Number
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: PRODUCT_ID
+    display_name: Product ID
+    datatype: string
+    business_description: Unique identifier of the product.
+    synonyms:
+    - Product ID
+    - Product Number
+    - Product Key
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: CALCULATION_DATE
+    display_name: Calculation Date
+    datatype: date
+    business_description: Date the Capable-to-Build calculation was run.
+    synonyms:
+    - Calculation Date
+    - Run Date
+  - name: REQUESTED_QTY
+    display_name: Requested Qty
+    datatype: decimal(38,0)
+    business_description: Quantity of the product requested to be built on the work order.
+    synonyms:
+    - Requested Quantity
+    - Demand Quantity
+  - name: CAN_BUILD_QTY
+    display_name: Can Build Qty
+    datatype: decimal(38,0)
+    business_description: Quantity that can actually be built given current constraints.
+    synonyms:
+    - Buildable Quantity
+    - Can-Build Quantity
+  - name: CTB_STATUS
+    display_name: CTB Status
+    datatype: string
+    business_description: Overall Capable-to-Build outcome (e.g. Full, Partial, Blocked).
+    synonyms:
+    - CTB Status
+    - Buildability Status
+  - name: CAN_BUILD_BASE
+    display_name: Can Build Base
+    datatype: bigint
+    business_description: Quantity buildable using only on-hand inventory, before considering deliveries
+      or safety stock.
+    synonyms:
+    - Base Buildable Quantity
+  - name: CAN_BUILD_WITH_DELIVERIES
+    display_name: Can Build With Deliveries
+    datatype: bigint
+    business_description: Quantity buildable when scheduled incoming deliveries are also counted.
+    synonyms:
+    - Buildable With Deliveries
+  - name: CAN_BUILD_WITH_SAFETY
+    display_name: Can Build With Safety
+    datatype: bigint
+    business_description: Quantity buildable when safety stock is also released for use.
+    synonyms:
+    - Buildable With Safety Stock
+  - name: CAN_BUILD_FULL
+    display_name: Can Build Full
+    datatype: bigint
+    business_description: Maximum quantity buildable across all available supply sources.
+    synonyms:
+    - Full Buildable Quantity
+  - name: PRODUCTION_STATUS
+    display_name: Production Status
+    datatype: string
+    business_description: Production status of the work order at the time of the CTB calculation.
+    synonyms:
+    - Production Status
+  - name: WEEK_START
+    display_name: Week Start
+    datatype: timestamp
+    business_description: Start date/time of the planning week for this CTB calculation.
+    synonyms:
+    - Week Start
+  - name: PLANNED_START_DATE
+    display_name: Planned Start Date
+    datatype: date
+    business_description: Planned start date of the work order being evaluated.
+    synonyms:
+    - Planned Start Date
+  measures:
+  - REQUESTED_QTY
+  - CAN_BUILD_QTY
+  - CAN_BUILD_BASE
+  - CAN_BUILD_WITH_DELIVERIES
+  - CAN_BUILD_WITH_SAFETY
+  - CAN_BUILD_FULL
+  dimensions:
+  - WORK_ORDER_ID
+  - PRODUCT_ID
+  - PLANT_ID
+  - CTB_STATUS
+  - PRODUCTION_STATUS
+  - CALCULATION_DATE
+  sample_questions:
+  - How many units of work order X can we build today?
+  - Which work orders are blocked from being fully built?
+  - Show CTB results by plant for this week.
+- table_name: inventory_dt
+  display_name: Inventory Snapshot
+  description: Point-in-time inventory snapshot by plant and part, including on-hand, reserved, in-transit,
+    and available quantities, costs, and safety stock levels.
+  synonyms:
+  - Inventory
+  - Stock Levels
+  - On-Hand Inventory
+  - Warehouse Stock
+  primary_key:
+  - INVENTORY_ID
+  foreign_keys:
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: plant_dt
+    join: inventory_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: INVENTORY_ID
+    display_name: Inventory ID
+    datatype: string
+    business_description: Unique identifier of the inventory.
+    synonyms:
+    - Inventory ID
+    - Inventory Number
+    - Inventory Key
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: PART_DESCRIPTION
+    display_name: Part Description
+    datatype: string
+    business_description: Descriptive name of the part or material.
+    synonyms:
+    - Part Name
+    - Material Description
+    - Item Description
+  - name: PART_TYPE
+    display_name: Part Type
+    datatype: string
+    business_description: Classification of the part (e.g. raw material, sub-assembly, finished good).
+    synonyms:
+    - Part Category
+    - Material Type
+    - Item Type
+  - name: STORAGE_LOCATION
+    display_name: Storage Location
+    datatype: string
+    business_description: Specific storage location or bin within the plant where the part is held.
+    synonyms:
+    - Storage Bin
+    - Warehouse Location
+  - name: STOCK_TYPE
+    display_name: Stock Type
+    datatype: string
+    business_description: Classification of the stock (e.g. Unrestricted, Blocked, Quality Inspection).
+    synonyms:
+    - Stock Type
+    - Inventory Category
+  - name: UNIT_OF_MEASURE
+    display_name: Unit Of Measure
+    datatype: string
+    business_description: Unit in which the quantity is measured (e.g. EA, KG, L).
+    synonyms:
+    - UOM
+    - Unit
+    - Measure Unit
+  - name: QTY_ON_HAND
+    display_name: Qty On Hand
+    datatype: decimal(18,4)
+    business_description: Total physical quantity of the part currently on hand at the plant.
+    synonyms:
+    - On-Hand Quantity
+    - Stock on Hand
+  - name: QTY_RESERVED
+    display_name: Qty Reserved
+    datatype: decimal(18,4)
+    business_description: Quantity of the part reserved against open demand.
+    synonyms:
+    - Reserved Quantity
+    - Allocated Quantity
+  - name: QTY_IN_TRANSIT
+    display_name: Qty In Transit
+    datatype: decimal(18,4)
+    business_description: Quantity of the part currently in transit and not yet received.
+    synonyms:
+    - In-Transit Quantity
+  - name: QTY_AVAILABLE
+    display_name: Qty Available
+    datatype: decimal(18,4)
+    business_description: Quantity of the part available for new demand (on-hand minus reserved).
+    synonyms:
+    - Available Quantity
+    - Free Stock
+  - name: MOVING_AVG_PRICE
+    display_name: Moving Avg Price
+    datatype: decimal(18,4)
+    business_description: Moving average unit price of the part.
+    synonyms:
+    - Moving Average Price
+    - MAP
+  - name: STANDARD_COST
+    display_name: Standard Cost
+    datatype: decimal(18,4)
+    business_description: Standard unit cost of the part.
+    synonyms:
+    - Standard Cost
+    - Std Cost
+  - name: CURRENCY_CODE
+    display_name: Currency Code
+    datatype: string
+    business_description: ISO currency code used for monetary values on this record.
+    synonyms:
+    - Currency
+    - Currency Type
+  - name: TOTAL_STOCK_VALUE
+    display_name: Total Stock Value
+    datatype: decimal(18,4)
+    business_description: Total inventory value of the part at this location (quantity x cost).
+    synonyms:
+    - Stock Value
+    - Inventory Value
+  - name: REORDER_POINT
+    display_name: Reorder Point
+    datatype: decimal(18,4)
+    business_description: Inventory level at which replenishment should be triggered.
+    synonyms:
+    - Reorder Point
+    - Reorder Level
+  - name: SAFETY_STOCK_QTY
+    display_name: Safety Stock Qty
+    datatype: decimal(18,4)
+    business_description: Quantity of the part held as a buffer against demand or supply variability.
+    synonyms:
+    - Safety Stock Quantity
+  - name: MAX_STOCK_QTY
+    display_name: Max Stock Qty
+    datatype: decimal(18,4)
+    business_description: Maximum inventory level targeted for this part at this location.
+    synonyms:
+    - Max Stock Level
+  - name: SNAPSHOT_DATE
+    display_name: Snapshot Date
+    datatype: date
+    business_description: Date the inventory snapshot was taken.
+    synonyms:
+    - Snapshot Date
+    - As-of Date
+  - name: LAST_GOODS_RECEIPT_DATE
+    display_name: Last Goods Receipt Date
+    datatype: date
+    business_description: Date of the most recent goods receipt for this part.
+    synonyms:
+    - Last Receipt Date
+  - name: LAST_GOODS_ISSUE_DATE
+    display_name: Last Goods Issue Date
+    datatype: date
+    business_description: Date of the most recent goods issue for this part.
+    synonyms:
+    - Last Issue Date
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  - name: SAFETY_STOCK
+    display_name: Safety Stock
+    datatype: decimal(38,0)
+    business_description: Target safety stock quantity defined for the part.
+    synonyms:
+    - Safety Stock Target
+  measures:
+  - QTY_ON_HAND
+  - QTY_RESERVED
+  - QTY_IN_TRANSIT
+  - QTY_AVAILABLE
+  - MOVING_AVG_PRICE
+  - STANDARD_COST
+  - TOTAL_STOCK_VALUE
+  - REORDER_POINT
+  - SAFETY_STOCK_QTY
+  - MAX_STOCK_QTY
+  - SAFETY_STOCK
+  dimensions:
+  - PLANT_ID
+  - PART_NUMBER
+  - PART_TYPE
+  - STOCK_TYPE
+  - SNAPSHOT_DATE
+  sample_questions:
+  - What is the current on-hand inventory for part X at plant Y?
+  - Which parts are below their reorder point?
+  - Show total stock value by plant.
+- table_name: lane_dt
+  display_name: Transportation Lanes
+  description: Master data for transportation lanes between plants, including origin/destination, distance,
+    transit time, cost, carrier, and reliability metrics.
+  synonyms:
+  - Lanes
+  - Shipping Lanes
+  - Transportation Routes
+  - Freight Lanes
+  primary_key:
+  - LANE_ID
+  foreign_keys:
+  - column: ORIGIN_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  - column: DEST_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: plant_dt
+    join: lane_dt.ORIGIN_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: lane_dt.DEST_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: LANE_ID
+    display_name: Lane ID
+    datatype: string
+    business_description: Unique identifier of the lane.
+    synonyms:
+    - Lane ID
+    - Lane Number
+    - Lane Key
+  - name: ORIGIN_PLANT_ID
+    display_name: Origin Plant ID
+    datatype: string
+    business_description: Unique identifier of the origin plant.
+    synonyms:
+    - Origin Plant ID
+    - Origin Plant Number
+    - Origin Plant Key
+  - name: ORIGIN_PLANT_NAME
+    display_name: Origin Plant Name
+    datatype: string
+    business_description: Name of the plant where the lane originates.
+    synonyms:
+    - Origin Plant
+  - name: ORIGIN_LATITUDE
+    display_name: Origin Latitude
+    datatype: decimal(10,6)
+    business_description: Geographic latitude coordinate.
+    synonyms:
+    - Lat
+  - name: ORIGIN_LONGITUDE
+    display_name: Origin Longitude
+    datatype: decimal(10,6)
+    business_description: Geographic longitude coordinate.
+    synonyms:
+    - Long
+    - Lng
+  - name: DEST_PLANT_ID
+    display_name: Dest Plant ID
+    datatype: string
+    business_description: Unique identifier of the dest plant.
+    synonyms:
+    - Dest Plant ID
+    - Dest Plant Number
+    - Dest Plant Key
+  - name: DEST_PLANT_NAME
+    display_name: Dest Plant Name
+    datatype: string
+    business_description: Name of the plant where the lane terminates.
+    synonyms:
+    - Destination Plant
+  - name: DEST_LATITUDE
+    display_name: Dest Latitude
+    datatype: decimal(10,6)
+    business_description: Geographic latitude coordinate.
+    synonyms:
+    - Lat
+  - name: DEST_LONGITUDE
+    display_name: Dest Longitude
+    datatype: decimal(10,6)
+    business_description: Geographic longitude coordinate.
+    synonyms:
+    - Long
+    - Lng
+  - name: TRANSPORT_MODE
+    display_name: Transport Mode
+    datatype: string
+    business_description: Mode of transportation used on this lane (e.g. Air, Ocean, Truck, Rail).
+    synonyms:
+    - Transport Mode
+    - Mode of Transport
+  - name: LANE_NAME
+    display_name: Lane Name
+    datatype: string
+    business_description: Descriptive name of the transportation lane.
+    synonyms:
+    - Lane Name
+  - name: DISTANCE_KM
+    display_name: Distance Km
+    datatype: decimal(10,2)
+    business_description: Distance between origin and destination in kilometers.
+    synonyms:
+    - Distance
+    - Distance in KM
+  - name: TRANSIT_DAYS
+    display_name: Transit Days
+    datatype: decimal(5,1)
+    business_description: Average number of days for goods to transit this lane.
+    synonyms:
+    - Transit Time
+    - Lead Time in Transit
+  - name: TRANSIT_COST_USD
+    display_name: Transit Cost USD
+    datatype: decimal(12,2)
+    business_description: Total cost, in USD, to transport a shipment on this lane.
+    synonyms:
+    - Transit Cost
+    - Shipping Cost
+  - name: COST_PER_UNIT_USD
+    display_name: Cost Per Unit USD
+    datatype: decimal(12,4)
+    business_description: Transportation cost per unit shipped, in USD.
+    synonyms:
+    - Cost per Unit
+  - name: CARRIER_NAME
+    display_name: Carrier Name
+    datatype: string
+    business_description: Descriptive name of the associated entity.
+    synonyms:
+    - Name
+    - Title
+  - name: SERVICE_LEVEL
+    display_name: Service Level
+    datatype: string
+    business_description: Service level offered on this lane (e.g. Standard, Express).
+    synonyms:
+    - Service Level
+  - name: CO2_KG_PER_UNIT
+    display_name: CO2 Kg Per Unit
+    datatype: decimal(10,4)
+    business_description: Carbon emissions, in kilograms of CO2, per unit shipped on this lane.
+    synonyms:
+    - CO2 per Unit
+    - Carbon Footprint
+  - name: RELIABILITY_PCT
+    display_name: Reliability %
+    datatype: decimal(5,2)
+    business_description: Percentage of shipments on this lane that arrive on time.
+    synonyms:
+    - On-Time Percentage
+    - Lane Reliability
+  - name: IS_ACTIVE
+    display_name: Is Active
+    datatype: boolean
+    business_description: Indicates whether the lane is currently active and usable for shipments.
+    synonyms:
+    - Active Flag
+    - Is Active
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - DISTANCE_KM
+  - TRANSIT_DAYS
+  - TRANSIT_COST_USD
+  - COST_PER_UNIT_USD
+  - CO2_KG_PER_UNIT
+  - RELIABILITY_PCT
+  dimensions:
+  - ORIGIN_PLANT_ID
+  - DEST_PLANT_ID
+  - TRANSPORT_MODE
+  - CARRIER_NAME
+  - SERVICE_LEVEL
+  sample_questions:
+  - What is the fastest lane between plant X and plant Y?
+  - Which lanes have the lowest reliability?
+  - Show average transit cost per unit by transport mode.
+- table_name: part_supplier_dt
+  display_name: Part-Supplier Sourcing
+  description: Sourcing relationships between parts and suppliers, including preferred supplier flag,
+    priority rank, lead time, pricing, and reliability score.
+  synonyms:
+  - Part Sourcing
+  - Approved Suppliers
+  - Supplier Sourcing
+  - Sourcing Master
+  primary_key:
+  - PART_SUPPLIER_ID
+  foreign_keys:
+  - column: SUPPLIER_ID
+    references:
+      table: supplier_summary_dt
+      column: SUPPLIER_ID
+  relationships:
+  - table: supplier_summary_dt
+    join: part_supplier_dt.SUPPLIER_ID = supplier_summary_dt.SUPPLIER_ID
+    cardinality: ManyToOne
+  columns:
+  - name: PART_SUPPLIER_ID
+    display_name: Part Supplier ID
+    datatype: string
+    business_description: Unique identifier of the part supplier.
+    synonyms:
+    - Part Supplier ID
+    - Part Supplier Number
+    - Part Supplier Key
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: SUPPLIER_ID
+    display_name: Supplier ID
+    datatype: string
+    business_description: Unique identifier of the supplier.
+    synonyms:
+    - Supplier ID
+    - Supplier Number
+    - Supplier Key
+  - name: SUPPLIER_PART_NUMBER
+    display_name: Supplier Part Number
+    datatype: string
+    business_description: Supplier's own part number for the cross-referenced part.
+    synonyms:
+    - Supplier Part No
+    - Vendor Part Number
+  - name: IS_PREFERRED
+    display_name: Is Preferred
+    datatype: boolean
+    business_description: Indicates whether this supplier is the preferred source for the part.
+    synonyms:
+    - Preferred Supplier Flag
+  - name: PRIORITY_RANK
+    display_name: Priority Rank
+    datatype: decimal(38,0)
+    business_description: Sourcing priority rank of this supplier for the part (1 = highest priority).
+    synonyms:
+    - Priority Rank
+    - Sourcing Rank
+  - name: LEAD_TIME_DAYS
+    display_name: Lead Time Days
+    datatype: decimal(38,0)
+    business_description: Quoted lead time, in days, for this supplier to deliver the part.
+    synonyms:
+    - Lead Time
+    - Supplier Lead Time
+  - name: UNIT_PRICE
+    display_name: Unit Price
+    datatype: decimal(18,4)
+    business_description: Price per unit charged by the supplier for the part.
+    synonyms:
+    - Unit Price
+    - Unit Cost
+  - name: CURRENCY_CODE
+    display_name: Currency Code
+    datatype: string
+    business_description: ISO currency code used for monetary values on this record.
+    synonyms:
+    - Currency
+    - Currency Type
+  - name: MIN_ORDER_QTY
+    display_name: Min Order Qty
+    datatype: decimal(18,4)
+    business_description: Minimum order quantity required by the supplier.
+    synonyms:
+    - MOQ
+    - Minimum Order Quantity
+  - name: ORDER_MULTIPLE_QTY
+    display_name: Order Multiple Qty
+    datatype: decimal(18,4)
+    business_description: Quantity increment in which orders must be placed with the supplier.
+    synonyms:
+    - Order Multiple
+    - Lot Size
+  - name: RELIABILITY_SCORE
+    display_name: Reliability Score
+    datatype: decimal(5,2)
+    business_description: Score reflecting the supplier's historical reliability for this part.
+    synonyms:
+    - Reliability Score
+  - name: EFFECTIVE_DATE
+    display_name: Effective Date
+    datatype: date
+    business_description: Date this sourcing record becomes effective.
+    synonyms:
+    - Effective Date
+  - name: EXPIRY_DATE
+    display_name: Expiry Date
+    datatype: date
+    business_description: Date this sourcing record expires.
+    synonyms:
+    - Expiry Date
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - LEAD_TIME_DAYS
+  - UNIT_PRICE
+  - MIN_ORDER_QTY
+  - ORDER_MULTIPLE_QTY
+  - RELIABILITY_SCORE
+  dimensions:
+  - PART_NUMBER
+  - SUPPLIER_ID
+  - IS_PREFERRED
+  sample_questions:
+  - Who is the preferred supplier for part X?
+  - Which suppliers offer the shortest lead time for part Y?
+  - Show all approved suppliers for a given part.
+- table_name: part_supply_dt
+  display_name: Part Supply Overview
+  description: Aggregated supply-side view per part showing number of suppliers, open PO quantity, shortage
+    alert count, and average lead time.
+  synonyms:
+  - Part Supply
+  - Supply Overview
+  - Part Availability Summary
+  primary_key:
+  - PART_NUMBER
+  columns:
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: SUPPLIER_COUNT
+    display_name: Supplier Count
+    datatype: bigint
+    business_description: Number of distinct suppliers approved to supply this part.
+    synonyms:
+    - Supplier Count
+    - Number of Suppliers
+  - name: SUPPLIER_IDS
+    display_name: Supplier Ids
+    datatype: string
+    business_description: List of supplier identifiers approved to supply this part.
+    synonyms:
+    - Supplier List
+    - Supplier IDs
+  - name: SHORTAGE_ALERT_COUNT
+    display_name: Shortage Alert Count
+    datatype: bigint
+    business_description: Number of open shortage alerts currently associated with this part.
+    synonyms:
+    - Open Shortage Alerts
+  - name: OPEN_PO_QTY
+    display_name: Open PO Qty
+    datatype: decimal(28,4)
+    business_description: Total outstanding purchase order quantity for this part across all suppliers.
+    synonyms:
+    - Open PO Quantity
+  - name: AVG_LEAD_TIME_DAYS
+    display_name: Avg Lead Time Days
+    datatype: decimal(12,1)
+    business_description: Average supplier lead time, in days, for this part.
+    synonyms:
+    - Average Lead Time
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - SUPPLIER_COUNT
+  - SHORTAGE_ALERT_COUNT
+  - OPEN_PO_QTY
+  - AVG_LEAD_TIME_DAYS
+  dimensions:
+  - PART_NUMBER
+  sample_questions:
+  - Which parts have the fewest suppliers?
+  - Show parts with open shortage alerts and their open PO quantity.
+  - What is the average lead time for part X across all suppliers?
+- table_name: pegging_dt
+  display_name: Demand-Supply Pegging
+  description: Pegging records linking demand for a part on a work order to a specific supply source (inventory,
+    PO, or transfer), including shortage quantity when supply cannot fully cover demand.
+  synonyms:
+  - Pegging
+  - Demand-Supply Matching
+  - Allocation
+  - Supply Pegging
+  primary_key:
+  - PEGGING_ID
+  foreign_keys:
+  - column: WORK_ORDER_ID
+    references:
+      table: work_order_dt
+      column: WORK_ORDER_ID
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: work_order_dt
+    join: pegging_dt.WORK_ORDER_ID = work_order_dt.WORK_ORDER_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: pegging_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: PEGGING_ID
+    display_name: Pegging ID
+    datatype: string
+    business_description: Unique identifier of the pegging record.
+    synonyms:
+    - Pegging ID
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: DEMAND_PART_NUMBER
+    display_name: Demand Part Number
+    datatype: string
+    business_description: Part number for which demand is being pegged to supply.
+    synonyms:
+    - Demand Part
+    - Required Part
+  - name: DEMAND_QTY
+    display_name: Demand Qty
+    datatype: decimal(38,4)
+    business_description: Quantity of the part demanded by the work order.
+    synonyms:
+    - Demand Quantity
+  - name: BOM_LEVEL
+    display_name: BOM Level
+    datatype: int
+    business_description: Level or tier associated with the record, indicating position in a hierarchy.
+    synonyms:
+    - Level
+    - Tier
+  - name: SUPPLY_TYPE
+    display_name: Supply Type
+    datatype: string
+    business_description: Type of supply source satisfying the demand (e.g. Inventory, Purchase Order,
+      Transfer).
+    synonyms:
+    - Supply Type
+    - Supply Source Type
+  - name: SUPPLY_SOURCE_ID
+    display_name: Supply Source ID
+    datatype: string
+    business_description: Identifier of the specific supply source (e.g. PO number, transfer ID) satisfying
+      the demand.
+    synonyms:
+    - Supply Source ID
+  - name: SUPPLY_PART_NUMBER
+    display_name: Supply Part Number
+    datatype: string
+    business_description: Part number of the supply being pegged to the demand.
+    synonyms:
+    - Supply Part
+  - name: SUPPLY_QTY
+    display_name: Supply Qty
+    datatype: decimal(38,4)
+    business_description: Quantity of supply pegged to satisfy the demand.
+    synonyms:
+    - Supply Quantity
+  - name: SUPPLY_DATE
+    display_name: Supply Date
+    datatype: date
+    business_description: Date the pegged supply is expected to be available.
+    synonyms:
+    - Supply Date
+  - name: PEGGING_STATUS
+    display_name: Pegging Status
+    datatype: string
+    business_description: Status of the pegging match (e.g. Fully Covered, Partially Covered, Shortage).
+    synonyms:
+    - Pegging Status
+  - name: SHORTAGE_QTY
+    display_name: Shortage Qty
+    datatype: decimal(38,4)
+    business_description: Quantity of demand not covered by the pegged supply.
+    synonyms:
+    - Shortage Quantity
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: PEGGING_DATE
+    display_name: Pegging Date
+    datatype: date
+    business_description: Date the pegging calculation was performed.
+    synonyms:
+    - Pegging Date
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  - name: USING_SAFETY_STOCK
+    display_name: Using Safety Stock
+    datatype: int
+    business_description: Indicates whether safety stock was used to satisfy this pegged demand.
+    synonyms:
+    - Uses Safety Stock
+  measures:
+  - DEMAND_QTY
+  - SUPPLY_QTY
+  - SHORTAGE_QTY
+  dimensions:
+  - WORK_ORDER_ID
+  - DEMAND_PART_NUMBER
+  - SUPPLY_TYPE
+  - PEGGING_STATUS
+  - PLANT_ID
+  sample_questions:
+  - What supply is pegged to work order X?
+  - Which demands have a shortage quantity greater than zero?
+  - Show pegging records using safety stock as the supply source.
+- table_name: plant_dt
+  display_name: Plants
+  description: Master data for manufacturing plants and facilities, including location, contact, time
+    zone, and active status.
+  synonyms:
+  - Plant
+  - Facility
+  - Site
+  - Manufacturing Plant
+  primary_key:
+  - PLANT_ID
+  columns:
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: PLANT_NAME
+    display_name: Plant Name
+    datatype: string
+    business_description: Name of the manufacturing plant or facility.
+    synonyms:
+    - Plant
+    - Facility Name
+    - Site Name
+  - name: PLANT_TYPE
+    display_name: Plant Type
+    datatype: string
+    business_description: Classification of the plant (e.g. Manufacturing, Distribution, Warehouse).
+    synonyms:
+    - Plant Type
+    - Facility Type
+  - name: CITY
+    display_name: City
+    datatype: string
+    business_description: City associated with the record.
+    synonyms:
+    - City
+  - name: STATE_PROVINCE
+    display_name: State Province
+    datatype: string
+    business_description: State or province associated with the record.
+    synonyms:
+    - State
+    - Province
+  - name: COUNTRY_CODE
+    display_name: Country Code
+    datatype: string
+    business_description: ISO country code where the plant is located.
+    synonyms:
+    - Country Code
+  - name: COUNTRY_NAME
+    display_name: Country Name
+    datatype: string
+    business_description: Country where the plant is located.
+    synonyms:
+    - Country
+  - name: REGION
+    display_name: Region
+    datatype: string
+    business_description: Geographic region of the associated entity.
+    synonyms:
+    - Region
+    - Area
+  - name: LATITUDE
+    display_name: Latitude
+    datatype: decimal(10,6)
+    business_description: Geographic latitude coordinate.
+    synonyms:
+    - Lat
+  - name: LONGITUDE
+    display_name: Longitude
+    datatype: decimal(10,6)
+    business_description: Geographic longitude coordinate.
+    synonyms:
+    - Long
+    - Lng
+  - name: PLANT_MANAGER
+    display_name: Plant Manager
+    datatype: string
+    business_description: Name of the person managing the associated entity.
+    synonyms:
+    - Manager
+    - Owner
+  - name: PHONE
+    display_name: Phone
+    datatype: string
+    business_description: Contact phone number.
+    synonyms:
+    - Phone
+    - Contact Number
+  - name: EMAIL
+    display_name: Email
+    datatype: string
+    business_description: Contact email address.
+    synonyms:
+    - Email
+    - Email Address
+  - name: TIME_ZONE
+    display_name: Time Zone
+    datatype: string
+    business_description: Time zone in which the plant operates.
+    synonyms:
+    - Time Zone
+  - name: IS_ACTIVE
+    display_name: Is Active
+    datatype: boolean
+    business_description: Indicates whether the plant is currently active and operating.
+    synonyms:
+    - Active Flag
+    - Is Active
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures: []
+  dimensions:
+  - PLANT_NAME
+  - PLANT_TYPE
+  - REGION
+  - COUNTRY_NAME
+  - IS_ACTIVE
+  sample_questions:
+  - List all active plants in region X.
+  - Who is the plant manager for plant Y?
+  - Show plants by country.
+- table_name: plant_summary_dt
+  display_name: Plant Summary
+  description: Aggregated operational summary per plant, including work order counts by readiness status,
+    shortage alert count, inventory value, and open PO count.
+  synonyms:
+  - Plant Summary
+  - Plant Scorecard
+  - Plant KPIs
+  primary_key:
+  - PLANT_ID
+  foreign_keys:
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: plant_dt
+    join: plant_summary_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: OneToOne
+  columns:
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: PLANT_NAME
+    display_name: Plant Name
+    datatype: string
+    business_description: Name of the manufacturing plant or facility.
+    synonyms:
+    - Plant
+    - Facility Name
+    - Site Name
+  - name: PLANT_TYPE
+    display_name: Plant Type
+    datatype: string
+    business_description: Classification/category of the record.
+    synonyms:
+    - Category
+    - Classification
+  - name: WORK_ORDER_COUNT
+    display_name: Work Order Count
+    datatype: bigint
+    business_description: Total number of work orders currently associated with the plant.
+    synonyms:
+    - Work Order Count
+    - Total Work Orders
+  - name: READY_COUNT
+    display_name: Ready Count
+    datatype: bigint
+    business_description: Number of work orders at the plant that are fully ready to build.
+    synonyms:
+    - Ready Work Orders
+  - name: PARTIAL_COUNT
+    display_name: Partial Count
+    datatype: bigint
+    business_description: Number of work orders at the plant that can only be partially built.
+    synonyms:
+    - Partially Buildable Work Orders
+  - name: BLOCKED_COUNT
+    display_name: Blocked Count
+    datatype: bigint
+    business_description: Number of work orders at the plant currently blocked from being built.
+    synonyms:
+    - Blocked Work Orders
+  - name: SHORTAGE_ALERT_COUNT
+    display_name: Shortage Alert Count
+    datatype: bigint
+    business_description: Number of open shortage alerts at the plant.
+    synonyms:
+    - Open Shortage Alerts
+  - name: INVENTORY_VALUE
+    display_name: Inventory Value
+    datatype: decimal(33,2)
+    business_description: Total inventory value held at the plant.
+    synonyms:
+    - Inventory Value
+    - Stock Value
+  - name: OPEN_PO_COUNT
+    display_name: Open PO Count
+    datatype: bigint
+    business_description: Number of open purchase orders for the plant.
+    synonyms:
+    - Open PO Count
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - WORK_ORDER_COUNT
+  - READY_COUNT
+  - PARTIAL_COUNT
+  - BLOCKED_COUNT
+  - SHORTAGE_ALERT_COUNT
+  - INVENTORY_VALUE
+  - OPEN_PO_COUNT
+  dimensions:
+  - PLANT_NAME
+  - PLANT_TYPE
+  sample_questions:
+  - Which plants have the most blocked work orders?
+  - Show inventory value by plant.
+  - What is the open PO count for plant X?
+- table_name: procurement_summary_dt
+  display_name: Procurement Summary
+  description: Summary of purchase order lines by part, supplier, and receiving plant, including ordered
+    and outstanding quantity, total value, delivery dates, and lateness indicator.
+  synonyms:
+  - Procurement Summary
+  - Purchase Orders
+  - PO Summary
+  - Purchasing Overview
+  primary_key:
+  - PO_ID
+  - PART_NUMBER
+  foreign_keys:
+  - column: SUPPLIER_ID
+    references:
+      table: supplier_summary_dt
+      column: SUPPLIER_ID
+  - column: RECEIVING_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: supplier_summary_dt
+    join: procurement_summary_dt.SUPPLIER_ID = supplier_summary_dt.SUPPLIER_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: procurement_summary_dt.RECEIVING_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: PO_ID
+    display_name: PO ID
+    datatype: string
+    business_description: Unique identifier of the purchase order.
+    synonyms:
+    - PO Number
+    - Order Number
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: SUPPLIER_ID
+    display_name: Supplier ID
+    datatype: string
+    business_description: Unique identifier of the supplier.
+    synonyms:
+    - Supplier ID
+    - Supplier Number
+    - Supplier Key
+  - name: RECEIVING_PLANT_ID
+    display_name: Receiving Plant ID
+    datatype: string
+    business_description: Unique identifier of the receiving plant.
+    synonyms:
+    - Receiving Plant ID
+    - Receiving Plant Number
+    - Receiving Plant Key
+  - name: PO_STATUS
+    display_name: PO Status
+    datatype: string
+    business_description: Current status of the purchase order (e.g. Open, Closed, Cancelled).
+    synonyms:
+    - PO Status
+    - Order Status
+  - name: PO_TYPE
+    display_name: PO Type
+    datatype: string
+    business_description: Type of purchase order (e.g. Standard, Blanket, Emergency).
+    synonyms:
+    - PO Type
+    - Order Type
+  - name: QTY_ORDERED
+    display_name: Qty Ordered
+    datatype: decimal(28,4)
+    business_description: Quantity of the part ordered on the purchase order line.
+    synonyms:
+    - Ordered Quantity
+  - name: QTY_OUTSTANDING
+    display_name: Qty Outstanding
+    datatype: decimal(28,4)
+    business_description: Quantity of the part still outstanding and not yet received.
+    synonyms:
+    - Outstanding Quantity
+    - Open Quantity
+  - name: TOTAL_VALUE
+    display_name: Total Value
+    datatype: decimal(28,4)
+    business_description: Total monetary value of the purchase order line.
+    synonyms:
+    - PO Value
+    - Line Value
+  - name: REQUESTED_DELIVERY_DATE
+    display_name: Requested Delivery Date
+    datatype: date
+    business_description: Delivery date originally requested by the buyer.
+    synonyms:
+    - Requested Delivery Date
+  - name: CONFIRMED_DELIVERY_DATE
+    display_name: Confirmed Delivery Date
+    datatype: date
+    business_description: Delivery date confirmed by the supplier.
+    synonyms:
+    - Confirmed Delivery Date
+  - name: ACTUAL_DELIVERY_DATE
+    display_name: Actual Delivery Date
+    datatype: date
+    business_description: Date the goods were actually delivered.
+    synonyms:
+    - Actual Delivery Date
+  - name: IS_LATE
+    display_name: Is Late
+    datatype: int
+    business_description: Indicates whether the delivery is/was late relative to the confirmed date.
+    synonyms:
+    - Late Flag
+    - Is Late
+  - name: QUOTED_LEAD_TIME_DAYS
+    display_name: Quoted Lead Time Days
+    datatype: decimal(5,0)
+    business_description: Lead time, in days, quoted by the supplier for this order.
+    synonyms:
+    - Quoted Lead Time
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - QTY_ORDERED
+  - QTY_OUTSTANDING
+  - TOTAL_VALUE
+  - QUOTED_LEAD_TIME_DAYS
+  dimensions:
+  - PART_NUMBER
+  - SUPPLIER_ID
+  - RECEIVING_PLANT_ID
+  - PO_STATUS
+  - PO_TYPE
+  sample_questions:
+  - Which purchase orders are late?
+  - Show total outstanding PO quantity by supplier.
+  - What is the total value of open POs for plant X?
+- table_name: release_checklist_result_dt
+  display_name: Release Checklist Results
+  description: Individual checklist item results recorded against a work order's release gate, including
+    check type, result, detail, and who performed the check.
+  synonyms:
+  - Checklist Results
+  - Release Checks
+  - Gate Checklist
+  primary_key:
+  - CHECKLIST_ID
+  foreign_keys:
+  - column: GATE_ID
+    references:
+      table: release_gate_dt
+      column: GATE_ID
+  - column: WORK_ORDER_ID
+    references:
+      table: work_order_dt
+      column: WORK_ORDER_ID
+  relationships:
+  - table: release_gate_dt
+    join: release_checklist_result_dt.GATE_ID = release_gate_dt.GATE_ID
+    cardinality: ManyToOne
+  - table: work_order_dt
+    join: release_checklist_result_dt.WORK_ORDER_ID = work_order_dt.WORK_ORDER_ID
+    cardinality: ManyToOne
+  columns:
+  - name: CHECKLIST_ID
+    display_name: Checklist ID
+    datatype: string
+    business_description: Unique identifier of the checklist result record.
+    synonyms:
+    - Checklist ID
+  - name: GATE_ID
+    display_name: Gate ID
+    datatype: string
+    business_description: Unique identifier of the gate.
+    synonyms:
+    - Gate ID
+    - Gate Number
+    - Gate Key
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: CHECK_TYPE
+    display_name: Check Type
+    datatype: string
+    business_description: Category of the checklist item (e.g. Materials, Quality, Documents).
+    synonyms:
+    - Check Type
+    - Check Category
+  - name: CHECK_NAME
+    display_name: Check Name
+    datatype: string
+    business_description: Name of the specific checklist item performed.
+    synonyms:
+    - Check Name
+  - name: CHECK_RESULT
+    display_name: Check Result
+    datatype: int
+    business_description: Outcome of the checklist item (e.g. Pass, Fail).
+    synonyms:
+    - Check Result
+    - Pass/Fail
+  - name: CHECK_DETAIL
+    display_name: Check Detail
+    datatype: string
+    business_description: Additional detail or notes captured for the checklist item result.
+    synonyms:
+    - Check Detail
+    - Notes
+  - name: CHECKED_AT
+    display_name: Checked At
+    datatype: timestamp
+    business_description: Timestamp when the checklist item was checked.
+    synonyms:
+    - Checked At
+    - Check Time
+  - name: CHECKED_BY
+    display_name: Checked By
+    datatype: string
+    business_description: Person who performed the checklist item check.
+    synonyms:
+    - Checked By
+    - Inspector
+  measures:
+  - CHECK_RESULT
+  dimensions:
+  - WORK_ORDER_ID
+  - GATE_ID
+  - CHECK_TYPE
+  - CHECK_RESULT
+  sample_questions:
+  - Which checklist items failed for work order X?
+  - Show all checks performed by user Y this week.
+  - What is the pass rate for the 'quality' check type?
+- table_name: release_gate_dt
+  display_name: Release Gates
+  description: Release gate status for work orders, summarizing whether materials, capacity, documents,
+    supplier confirmation, and quality checks have passed before a work order can be released.
+  synonyms:
+  - Release Gate
+  - Work Order Gate
+  - Release Readiness
+  primary_key:
+  - GATE_ID
+  foreign_keys:
+  - column: WORK_ORDER_ID
+    references:
+      table: work_order_dt
+      column: WORK_ORDER_ID
+  relationships:
+  - table: work_order_dt
+    join: release_gate_dt.WORK_ORDER_ID = work_order_dt.WORK_ORDER_ID
+    cardinality: OneToOne
+  columns:
+  - name: GATE_ID
+    display_name: Gate ID
+    datatype: string
+    business_description: Unique identifier of the release gate.
+    synonyms:
+    - Gate ID
+    - Release Gate Number
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: GATE_STATUS
+    display_name: Gate Status
+    datatype: string
+    business_description: Overall status of the release gate (e.g. Open, Passed, Blocked).
+    synonyms:
+    - Gate Status
+  - name: MATERIALS_CHECK
+    display_name: Materials Check
+    datatype: int
+    business_description: Result of the materials-availability check for release (Pass/Fail).
+    synonyms:
+    - Materials Check
+  - name: CAPACITY_CHECK
+    display_name: Capacity Check
+    datatype: int
+    business_description: Result of the production-capacity check for release (Pass/Fail).
+    synonyms:
+    - Capacity Check
+  - name: DOCUMENTS_CHECK
+    display_name: Documents Check
+    datatype: int
+    business_description: Result of the required-documents check for release (Pass/Fail).
+    synonyms:
+    - Documents Check
+  - name: SUPPLIER_CONFIRM_CHECK
+    display_name: Supplier Confirm Check
+    datatype: int
+    business_description: Result of the supplier-confirmation check for release (Pass/Fail).
+    synonyms:
+    - Supplier Confirmation Check
+  - name: QUALITY_CHECK
+    display_name: Quality Check
+    datatype: int
+    business_description: Result of the quality check for release (Pass/Fail).
+    synonyms:
+    - Quality Check
+  - name: ALL_CHECKS_PASSED
+    display_name: All Checks Passed
+    datatype: int
+    business_description: Indicates whether every required checklist item has passed.
+    synonyms:
+    - All Checks Passed
+  - name: BLOCKED_REASON
+    display_name: Blocked Reason
+    datatype: string
+    business_description: Reason the gate is currently blocked from release.
+    synonyms:
+    - Blocked Reason
+    - Hold Reason
+  - name: GATE_OPENED_DATE
+    display_name: Gate Opened Date
+    datatype: date
+    business_description: Date the release gate was opened for review.
+    synonyms:
+    - Gate Opened Date
+  - name: GATE_OPENED_BY
+    display_name: Gate Opened By
+    datatype: string
+    business_description: Person who opened the release gate.
+    synonyms:
+    - Gate Opened By
+  - name: OVERRIDE_APPROVED
+    display_name: Override Approved
+    datatype: int
+    business_description: Indicates whether a manual override was approved to bypass a failed check.
+    synonyms:
+    - Override Approved
+  - name: OVERRIDE_APPROVED_BY
+    display_name: Override Approved By
+    datatype: string
+    business_description: Person who approved the manual override.
+    synonyms:
+    - Override Approved By
+  - name: OVERRIDE_REASON
+    display_name: Override Reason
+    datatype: string
+    business_description: Reason given for approving the manual override.
+    synonyms:
+    - Override Reason
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - MATERIALS_CHECK
+  - CAPACITY_CHECK
+  - DOCUMENTS_CHECK
+  - SUPPLIER_CONFIRM_CHECK
+  - QUALITY_CHECK
+  - ALL_CHECKS_PASSED
+  - OVERRIDE_APPROVED
+  dimensions:
+  - WORK_ORDER_ID
+  - GATE_STATUS
+  sample_questions:
+  - Which work orders are blocked from release and why?
+  - Show all gates where an override was approved.
+  - What percentage of gates have all checks passed?
+- table_name: shortage_alert_dt
+  display_name: Shortage Alerts
+  description: Alerts raised when a part shortage threatens a work order, including severity, shortage
+    quantity, required date, business impact, and suggested corrective action.
+  synonyms:
+  - Shortage Alerts
+  - Material Shortages
+  - Supply Alerts
+  - Risk Alerts
+  primary_key:
+  - ALERT_ID
+  foreign_keys:
+  - column: WORK_ORDER_ID
+    references:
+      table: work_order_dt
+      column: WORK_ORDER_ID
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: work_order_dt
+    join: shortage_alert_dt.WORK_ORDER_ID = work_order_dt.WORK_ORDER_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: shortage_alert_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: ALERT_ID
+    display_name: Alert ID
+    datatype: string
+    business_description: Unique identifier of the shortage alert.
+    synonyms:
+    - Alert ID
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: ALERT_TYPE
+    display_name: Alert Type
+    datatype: string
+    business_description: Type of shortage alert raised (e.g. Material Shortage, Capacity Shortage).
+    synonyms:
+    - Alert Type
+  - name: SEVERITY
+    display_name: Severity
+    datatype: string
+    business_description: Severity level of the shortage alert (e.g. Low, Medium, High, Critical).
+    synonyms:
+    - Severity
+    - Alert Severity
+  - name: SHORTAGE_QTY
+    display_name: Shortage Qty
+    datatype: decimal(38,4)
+    business_description: Quantity of the part short relative to the required amount.
+    synonyms:
+    - Shortage Quantity
+  - name: REQUIRED_DATE
+    display_name: Required Date
+    datatype: date
+    business_description: Date the part is required by, to avoid impacting the build.
+    synonyms:
+    - Required Date
+    - Need-By Date
+  - name: IMPACT_DESCRIPTION
+    display_name: Impact Description
+    datatype: string
+    business_description: Description of the business impact if the shortage is not resolved.
+    synonyms:
+    - Impact Description
+    - Business Impact
+  - name: AFFECTED_PRODUCT_IDS
+    display_name: Affected Product Ids
+    datatype: string
+    business_description: Products that would be affected if this shortage is not resolved.
+    synonyms:
+    - Affected Products
+  - name: SUGGESTED_ACTION
+    display_name: Suggested Action
+    datatype: string
+    business_description: Recommended action to resolve or mitigate the shortage.
+    synonyms:
+    - Suggested Action
+    - Recommended Action
+  - name: ALERT_STATUS
+    display_name: Alert Status
+    datatype: string
+    business_description: Current status of the alert (e.g. Open, Acknowledged, Resolved).
+    synonyms:
+    - Alert Status
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - SHORTAGE_QTY
+  dimensions:
+  - PART_NUMBER
+  - PLANT_ID
+  - ALERT_TYPE
+  - SEVERITY
+  - ALERT_STATUS
+  sample_questions:
+  - What are the highest severity shortage alerts open today?
+  - Which parts have the most shortage alerts by plant?
+  - Show suggested actions for open shortage alerts.
+- table_name: sto_dt
+  display_name: Stock Transfer Orders
+  description: Stock Transfer Orders (STOs) moving parts between plants along a transportation lane, including
+    requested, shipped, in-transit, and received quantities, cost, and status.
+  synonyms:
+  - STO
+  - Stock Transfer Order
+  - Inter-Plant Transfer
+  - Material Transfer
+  primary_key:
+  - STO_ID
+  - STO_LINE_ID
+  foreign_keys:
+  - column: LANE_ID
+    references:
+      table: lane_dt
+      column: LANE_ID
+  - column: ORIGIN_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  - column: DEST_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: lane_dt
+    join: sto_dt.LANE_ID = lane_dt.LANE_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: sto_dt.ORIGIN_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: sto_dt.DEST_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: STO_ID
+    display_name: STO ID
+    datatype: string
+    business_description: Unique identifier of the stock transfer order.
+    synonyms:
+    - STO Number
+    - Transfer Order Number
+  - name: STO_LINE_ID
+    display_name: STO Line ID
+    datatype: string
+    business_description: Identifier of the specific line item within the stock transfer order.
+    synonyms:
+    - STO Line
+    - Transfer Line
+  - name: LANE_ID
+    display_name: Lane ID
+    datatype: string
+    business_description: Unique identifier of the lane.
+    synonyms:
+    - Lane ID
+    - Lane Number
+    - Lane Key
+  - name: ORIGIN_PLANT_ID
+    display_name: Origin Plant ID
+    datatype: string
+    business_description: Unique identifier of the origin plant.
+    synonyms:
+    - Origin Plant ID
+    - Origin Plant Number
+    - Origin Plant Key
+  - name: ORIGIN_PLANT_NAME
+    display_name: Origin Plant Name
+    datatype: string
+    business_description: Name of the plant the stock is being transferred from.
+    synonyms:
+    - Origin Plant
+  - name: DEST_PLANT_ID
+    display_name: Dest Plant ID
+    datatype: string
+    business_description: Unique identifier of the dest plant.
+    synonyms:
+    - Dest Plant ID
+    - Dest Plant Number
+    - Dest Plant Key
+  - name: DEST_PLANT_NAME
+    display_name: Dest Plant Name
+    datatype: string
+    business_description: Name of the plant the stock is being transferred to.
+    synonyms:
+    - Destination Plant
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: PART_DESCRIPTION
+    display_name: Part Description
+    datatype: string
+    business_description: Descriptive name of the part or material.
+    synonyms:
+    - Part Name
+    - Material Description
+    - Item Description
+  - name: UNIT_OF_MEASURE
+    display_name: Unit Of Measure
+    datatype: string
+    business_description: Unit in which the quantity is measured (e.g. EA, KG, L).
+    synonyms:
+    - UOM
+    - Unit
+    - Measure Unit
+  - name: QTY_REQUESTED
+    display_name: Qty Requested
+    datatype: decimal(18,4)
+    business_description: Quantity of the part requested for transfer.
+    synonyms:
+    - Requested Quantity
+  - name: QTY_SHIPPED
+    display_name: Qty Shipped
+    datatype: decimal(18,4)
+    business_description: Quantity of the part shipped for this transfer.
+    synonyms:
+    - Shipped Quantity
+  - name: QTY_IN_TRANSIT
+    display_name: Qty In Transit
+    datatype: decimal(18,4)
+    business_description: Quantity of the part currently in transit for this transfer.
+    synonyms:
+    - In-Transit Quantity
+  - name: QTY_RECEIVED
+    display_name: Qty Received
+    datatype: decimal(18,4)
+    business_description: Quantity of the part received at the destination plant.
+    synonyms:
+    - Received Quantity
+  - name: TRANSPORT_MODE
+    display_name: Transport Mode
+    datatype: string
+    business_description: Mode of transportation used for the transfer (e.g. Air, Truck, Ocean).
+    synonyms:
+    - Transport Mode
+  - name: CARRIER_NAME
+    display_name: Carrier Name
+    datatype: string
+    business_description: Descriptive name of the associated entity.
+    synonyms:
+    - Name
+    - Title
+  - name: TRANSIT_DAYS
+    display_name: Transit Days
+    datatype: decimal(5,1)
+    business_description: Duration, in days, associated with the record.
+    synonyms:
+    - Days
+    - Duration
+  - name: UNIT_TRANSFER_COST
+    display_name: Unit Transfer Cost
+    datatype: decimal(12,4)
+    business_description: Cost to transfer a single unit of the part.
+    synonyms:
+    - Unit Transfer Cost
+  - name: TOTAL_TRANSFER_COST
+    display_name: Total Transfer Cost
+    datatype: decimal(14,2)
+    business_description: Total cost of transferring the requested quantity.
+    synonyms:
+    - Total Transfer Cost
+  - name: CURRENCY_CODE
+    display_name: Currency Code
+    datatype: string
+    business_description: ISO currency code used for monetary values on this record.
+    synonyms:
+    - Currency
+    - Currency Type
+  - name: STO_STATUS
+    display_name: STO Status
+    datatype: string
+    business_description: Current status of the stock transfer order (e.g. Open, In Transit, Completed).
+    synonyms:
+    - STO Status
+    - Transfer Status
+  - name: PRIORITY
+    display_name: Priority
+    datatype: decimal(3,0)
+    business_description: Priority ranking of the transfer order.
+    synonyms:
+    - Priority
+    - Transfer Priority
+  - name: REASON_CODE
+    display_name: Reason Code
+    datatype: string
+    business_description: Code indicating the reason the transfer was requested.
+    synonyms:
+    - Reason Code
+  - name: REQUESTED_DELIVERY_DATE
+    display_name: Requested Delivery Date
+    datatype: date
+    business_description: Delivery date requested for the transfer.
+    synonyms:
+    - Requested Delivery Date
+  - name: PROMISED_DELIVERY_DATE
+    display_name: Promised Delivery Date
+    datatype: date
+    business_description: Delivery date promised for the transfer.
+    synonyms:
+    - Promised Delivery Date
+  - name: SHIP_DATE
+    display_name: Ship Date
+    datatype: date
+    business_description: Date associated with the event described by the column name.
+    synonyms:
+    - Date
+  - name: EXPECTED_ARRIVAL_DATE
+    display_name: Expected Arrival Date
+    datatype: date
+    business_description: Date associated with the event described by the column name.
+    synonyms:
+    - Date
+  - name: ACTUAL_DELIVERY_DATE
+    display_name: Actual Delivery Date
+    datatype: date
+    business_description: Date associated with the event described by the column name.
+    synonyms:
+    - Date
+  - name: REQUESTED_BY
+    display_name: Requested By
+    datatype: string
+    business_description: Person who requested the stock transfer.
+    synonyms:
+    - Requested By
+  - name: APPROVED_BY
+    display_name: Approved By
+    datatype: string
+    business_description: Person who approved the stock transfer.
+    synonyms:
+    - Approved By
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - QTY_REQUESTED
+  - QTY_SHIPPED
+  - QTY_IN_TRANSIT
+  - QTY_RECEIVED
+  - TRANSIT_DAYS
+  - UNIT_TRANSFER_COST
+  - TOTAL_TRANSFER_COST
+  dimensions:
+  - PART_NUMBER
+  - ORIGIN_PLANT_ID
+  - DEST_PLANT_ID
+  - TRANSPORT_MODE
+  - STO_STATUS
+  sample_questions:
+  - Which stock transfer orders are still in transit?
+  - Show total transfer cost by origin and destination plant.
+  - What is the average transit time for transfers of part X?
+- table_name: supplier_summary_dt
+  display_name: Supplier Summary
+  description: Aggregated supplier performance scorecard including PO volume, on-time delivery percentage,
+    lead times, reliability, quality rating, open PO value, and risk score.
+  synonyms:
+  - Supplier Summary
+  - Supplier Scorecard
+  - Supplier Performance
+  - Vendor Performance
+  primary_key:
+  - SUPPLIER_ID
+  columns:
+  - name: SUPPLIER_ID
+    display_name: Supplier ID
+    datatype: string
+    business_description: Unique identifier of the supplier.
+    synonyms:
+    - Supplier ID
+    - Supplier Number
+    - Supplier Key
+  - name: SUPPLIER_NAME
+    display_name: Supplier Name
+    datatype: string
+    business_description: Name of the supplier.
+    synonyms:
+    - Vendor
+    - Supplier
+    - Manufacturer
+  - name: SUPPLIER_TYPE
+    display_name: Supplier Type
+    datatype: string
+    business_description: Classification of the supplier (e.g. Manufacturer, Distributor, Contract Manufacturer).
+    synonyms:
+    - Supplier Type
+    - Vendor Type
+  - name: TOTAL_POS
+    display_name: Total Pos
+    datatype: bigint
+    business_description: Total number of purchase orders placed with the supplier.
+    synonyms:
+    - Total POs
+    - Total Purchase Orders
+  - name: TOTAL_PO_LINES
+    display_name: Total PO Lines
+    datatype: bigint
+    business_description: Total number of purchase order lines placed with the supplier.
+    synonyms:
+    - Total PO Lines
+  - name: ON_TIME_DELIVERIES
+    display_name: On Time Deliveries
+    datatype: bigint
+    business_description: Number of deliveries received on or before the confirmed date.
+    synonyms:
+    - On-Time Deliveries
+  - name: LATE_DELIVERIES
+    display_name: Late Deliveries
+    datatype: bigint
+    business_description: Number of deliveries received after the confirmed date.
+    synonyms:
+    - Late Deliveries
+  - name: ON_TIME_PCT
+    display_name: On Time %
+    datatype: decimal(26,1)
+    business_description: Percentage of deliveries received on time.
+    synonyms:
+    - On-Time Percentage
+    - On-Time Delivery Rate
+  - name: AVG_QUOTED_LEAD_TIME_DAYS
+    display_name: Avg Quoted Lead Time Days
+    datatype: decimal(12,1)
+    business_description: Average lead time, in days, quoted by the supplier.
+    synonyms:
+    - Average Quoted Lead Time
+  - name: AVG_ACTUAL_LEAD_TIME_DAYS
+    display_name: Avg Actual Lead Time Days
+    datatype: decimal(12,1)
+    business_description: Average actual lead time, in days, realized across deliveries.
+    synonyms:
+    - Average Actual Lead Time
+  - name: RELIABILITY_SCORE
+    display_name: Reliability Score
+    datatype: decimal(5,2)
+    business_description: Overall score reflecting the supplier's delivery reliability.
+    synonyms:
+    - Reliability Score
+  - name: QUALITY_RATING
+    display_name: Quality Rating
+    datatype: decimal(5,2)
+    business_description: Rating reflecting the quality of parts delivered by the supplier.
+    synonyms:
+    - Quality Rating
+  - name: OPEN_PO_COUNT
+    display_name: Open PO Count
+    datatype: bigint
+    business_description: Number of purchase orders currently open with the supplier.
+    synonyms:
+    - Open PO Count
+  - name: OPEN_PO_VALUE
+    display_name: Open PO Value
+    datatype: decimal(33,2)
+    business_description: Total monetary value of open purchase orders with the supplier.
+    synonyms:
+    - Open PO Value
+  - name: PARTS_SUPPLIED_COUNT
+    display_name: Parts Supplied Count
+    datatype: bigint
+    business_description: Number of distinct parts supplied by the supplier.
+    synonyms:
+    - Parts Supplied Count
+  - name: RISK_SCORE
+    display_name: Risk Score
+    datatype: decimal(30,1)
+    business_description: Score reflecting the overall supply risk associated with the supplier.
+    synonyms:
+    - Risk Score
+    - Supplier Risk
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - TOTAL_POS
+  - TOTAL_PO_LINES
+  - ON_TIME_DELIVERIES
+  - LATE_DELIVERIES
+  - ON_TIME_PCT
+  - AVG_QUOTED_LEAD_TIME_DAYS
+  - AVG_ACTUAL_LEAD_TIME_DAYS
+  - RELIABILITY_SCORE
+  - QUALITY_RATING
+  - OPEN_PO_COUNT
+  - OPEN_PO_VALUE
+  - PARTS_SUPPLIED_COUNT
+  - RISK_SCORE
+  dimensions:
+  - SUPPLIER_NAME
+  - SUPPLIER_TYPE
+  sample_questions:
+  - Which suppliers have the highest risk score?
+  - Show on-time delivery percentage by supplier.
+  - Top 10 suppliers by open PO value.
+- table_name: transfer_candidates_dt
+  display_name: Transfer Candidates
+  description: Recommended inter-plant transfer candidates that could resolve a destination plant's part
+    shortage by moving available stock from an origin plant, scored by feasibility.
+  synonyms:
+  - Transfer Candidates
+  - Transfer Recommendations
+  - Inter-Plant Transfer Suggestions
+  primary_key:
+  - PART_NUMBER
+  - ORIGIN_PLANT_ID
+  - DEST_PLANT_ID
+  foreign_keys:
+  - column: DEST_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  - column: ORIGIN_PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  - column: LANE_ID
+    references:
+      table: lane_dt
+      column: LANE_ID
+  relationships:
+  - table: plant_dt
+    join: transfer_candidates_dt.DEST_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  - table: plant_dt
+    join: transfer_candidates_dt.ORIGIN_PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  - table: lane_dt
+    join: transfer_candidates_dt.LANE_ID = lane_dt.LANE_ID
+    cardinality: ManyToOne
+  columns:
+  - name: PART_NUMBER
+    display_name: Part Number
+    datatype: string
+    business_description: Unique identifier of the part or material.
+    synonyms:
+    - Part No
+    - Material Number
+    - SKU
+    - Item Number
+  - name: PART_DESCRIPTION
+    display_name: Part Description
+    datatype: string
+    business_description: Descriptive name of the part or material.
+    synonyms:
+    - Part Name
+    - Material Description
+    - Item Description
+  - name: DEST_PLANT_ID
+    display_name: Dest Plant ID
+    datatype: string
+    business_description: Unique identifier of the dest plant.
+    synonyms:
+    - Dest Plant ID
+    - Dest Plant Number
+    - Dest Plant Key
+  - name: DEST_PLANT_NAME
+    display_name: Dest Plant Name
+    datatype: string
+    business_description: Name of the manufacturing plant or facility.
+    synonyms:
+    - Plant
+    - Facility Name
+    - Site Name
+  - name: DEST_LATITUDE
+    display_name: Dest Latitude
+    datatype: decimal(10,6)
+    business_description: Geographic latitude coordinate.
+    synonyms:
+    - Lat
+  - name: DEST_LONGITUDE
+    display_name: Dest Longitude
+    datatype: decimal(10,6)
+    business_description: Geographic longitude coordinate.
+    synonyms:
+    - Long
+    - Lng
+  - name: DEST_AVAILABLE_QTY
+    display_name: Dest Available Qty
+    datatype: decimal(28,4)
+    business_description: Quantity of the part currently available at the destination plant.
+    synonyms:
+    - Destination Available Quantity
+  - name: DEST_REQUIRED_QTY
+    display_name: Dest Required Qty
+    datatype: decimal(38,4)
+    business_description: Quantity of the part required at the destination plant.
+    synonyms:
+    - Destination Required Quantity
+  - name: DEST_GAP_QTY
+    display_name: Dest Gap Qty
+    datatype: decimal(38,4)
+    business_description: Shortfall quantity at the destination plant that the transfer could cover.
+    synonyms:
+    - Destination Gap Quantity
+    - Shortfall Quantity
+  - name: QTY_PER_ASSEMBLY
+    display_name: Qty Per Assembly
+    datatype: decimal(22,8)
+    business_description: Quantity of the part consumed per unit of assembly at the destination.
+    synonyms:
+    - Qty per Assembly
+  - name: EARLIEST_NEED_DATE
+    display_name: Earliest Need Date
+    datatype: date
+    business_description: Earliest date the destination plant needs the part.
+    synonyms:
+    - Earliest Need Date
+    - Need-By Date
+  - name: ORIGIN_PLANT_ID
+    display_name: Origin Plant ID
+    datatype: string
+    business_description: Unique identifier of the origin plant.
+    synonyms:
+    - Origin Plant ID
+    - Origin Plant Number
+    - Origin Plant Key
+  - name: ORIGIN_PLANT_NAME
+    display_name: Origin Plant Name
+    datatype: string
+    business_description: Name of the manufacturing plant or facility.
+    synonyms:
+    - Plant
+    - Facility Name
+    - Site Name
+  - name: ORIGIN_LATITUDE
+    display_name: Origin Latitude
+    datatype: decimal(10,6)
+    business_description: Geographic latitude coordinate.
+    synonyms:
+    - Lat
+  - name: ORIGIN_LONGITUDE
+    display_name: Origin Longitude
+    datatype: decimal(10,6)
+    business_description: Geographic longitude coordinate.
+    synonyms:
+    - Long
+    - Lng
+  - name: ORIGIN_AVAILABLE_QTY
+    display_name: Origin Available Qty
+    datatype: decimal(28,4)
+    business_description: Quantity of the part available for transfer at the origin plant.
+    synonyms:
+    - Origin Available Quantity
+  - name: ORIGIN_SAFETY_STOCK
+    display_name: Origin Safety Stock
+    datatype: decimal(38,0)
+    business_description: Safety stock quantity held at the origin plant that should be protected from
+      transfer.
+    synonyms:
+    - Origin Safety Stock
+  - name: TRANSPORT_MODE
+    display_name: Transport Mode
+    datatype: string
+    business_description: Recommended mode of transportation for the transfer.
+    synonyms:
+    - Transport Mode
+  - name: LANE_ID
+    display_name: Lane ID
+    datatype: string
+    business_description: Unique identifier of the lane.
+    synonyms:
+    - Lane ID
+    - Lane Number
+    - Lane Key
+  - name: CARRIER_NAME
+    display_name: Carrier Name
+    datatype: string
+    business_description: Descriptive name of the associated entity.
+    synonyms:
+    - Name
+    - Title
+  - name: DISTANCE_KM
+    display_name: Distance Km
+    datatype: decimal(10,2)
+    business_description: Distance Km associated with the record.
+    synonyms:
+    - Distance Km
+  - name: TRANSIT_DAYS
+    display_name: Transit Days
+    datatype: decimal(5,1)
+    business_description: Duration, in days, associated with the record.
+    synonyms:
+    - Days
+    - Duration
+  - name: COST_PER_UNIT_USD
+    display_name: Cost Per Unit USD
+    datatype: decimal(12,4)
+    business_description: Monetary value associated with the record.
+    synonyms:
+    - Cost
+    - Value
+    - Amount
+    - Price
+  - name: PROTECTABLE_QTY
+    display_name: Protectable Qty
+    datatype: decimal(38,4)
+    business_description: Quantity that can be transferred from the origin without breaching its safety
+      stock.
+    synonyms:
+    - Protectable Quantity
+  - name: PROTECTED_BUILDS
+    display_name: Protected Builds
+    datatype: decimal(33,0)
+    business_description: Number of builds at the destination plant that would be protected by this transfer.
+    synonyms:
+    - Protected Builds
+  - name: SCORE
+    display_name: Score
+    datatype: decimal(35,2)
+    business_description: Overall feasibility score of this transfer candidate; higher is more favorable.
+    synonyms:
+    - Transfer Score
+    - Recommendation Score
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - DEST_AVAILABLE_QTY
+  - DEST_REQUIRED_QTY
+  - DEST_GAP_QTY
+  - ORIGIN_AVAILABLE_QTY
+  - ORIGIN_SAFETY_STOCK
+  - DISTANCE_KM
+  - TRANSIT_DAYS
+  - COST_PER_UNIT_USD
+  - PROTECTABLE_QTY
+  - PROTECTED_BUILDS
+  - SCORE
+  dimensions:
+  - PART_NUMBER
+  - ORIGIN_PLANT_ID
+  - DEST_PLANT_ID
+  - TRANSPORT_MODE
+  sample_questions:
+  - What are the best transfer candidates to resolve the shortage of part X at plant Y?
+  - Which origin plant has the most protectable quantity for transfer?
+  - Show top-scored transfer candidates this week.
+- table_name: work_order_dt
+  display_name: Work Orders
+  description: Manufacturing work orders describing the product being built, the plant, planned and actual
+    dates, planned/completed/scrapped quantities, and release status.
+  synonyms:
+  - Work Order
+  - Production Order
+  - Manufacturing Order
+  - WO
+  primary_key:
+  - WORK_ORDER_ID
+  foreign_keys:
+  - column: PLANT_ID
+    references:
+      table: plant_dt
+      column: PLANT_ID
+  relationships:
+  - table: plant_dt
+    join: work_order_dt.PLANT_ID = plant_dt.PLANT_ID
+    cardinality: ManyToOne
+  columns:
+  - name: WORK_ORDER_ID
+    display_name: Work Order ID
+    datatype: string
+    business_description: Unique identifier of the work order.
+    synonyms:
+    - Work Order ID
+    - Work Order Number
+    - Work Order Key
+  - name: PRODUCT_ID
+    display_name: Product ID
+    datatype: string
+    business_description: Unique identifier of the product.
+    synonyms:
+    - Product ID
+    - Product Number
+    - Product Key
+  - name: PLANT_ID
+    display_name: Plant ID
+    datatype: string
+    business_description: Unique identifier of the plant.
+    synonyms:
+    - Plant ID
+    - Plant Number
+    - Plant Key
+  - name: WORK_ORDER_TYPE
+    display_name: Work Order Type
+    datatype: string
+    business_description: Type of work order (e.g. Standard, Rework, Prototype).
+    synonyms:
+    - Work Order Type
+  - name: WORK_ORDER_STATUS
+    display_name: Work Order Status
+    datatype: string
+    business_description: Current status of the work order (e.g. Planned, Released, In Progress, Completed).
+    synonyms:
+    - Work Order Status
+  - name: PRIORITY
+    display_name: Priority
+    datatype: decimal(38,0)
+    business_description: Priority ranking of the work order.
+    synonyms:
+    - Priority
+  - name: PLANNED_START_DATE
+    display_name: Planned Start Date
+    datatype: date
+    business_description: Planned start date of the work order.
+    synonyms:
+    - Planned Start Date
+  - name: PLANNED_END_DATE
+    display_name: Planned End Date
+    datatype: date
+    business_description: Planned completion date of the work order.
+    synonyms:
+    - Planned End Date
+  - name: ACTUAL_START_DATE
+    display_name: Actual Start Date
+    datatype: date
+    business_description: Actual date production started on the work order.
+    synonyms:
+    - Actual Start Date
+  - name: ACTUAL_END_DATE
+    display_name: Actual End Date
+    datatype: date
+    business_description: Actual date production completed on the work order.
+    synonyms:
+    - Actual End Date
+  - name: PLANNED_QTY
+    display_name: Planned Qty
+    datatype: decimal(38,0)
+    business_description: Quantity planned to be built on the work order.
+    synonyms:
+    - Planned Quantity
+  - name: COMPLETED_QTY
+    display_name: Completed Qty
+    datatype: decimal(38,0)
+    business_description: Quantity successfully completed on the work order.
+    synonyms:
+    - Completed Quantity
+  - name: SCRAPPED_QTY
+    display_name: Scrapped Qty
+    datatype: decimal(38,0)
+    business_description: Quantity scrapped during production of the work order.
+    synonyms:
+    - Scrapped Quantity
+  - name: BOM_VERSION
+    display_name: BOM Version
+    datatype: string
+    business_description: Version of the Bill of Materials used for this work order.
+    synonyms:
+    - BOM Version
+  - name: ROUTING_VERSION
+    display_name: Routing Version
+    datatype: string
+    business_description: Version of the manufacturing routing used for this work order.
+    synonyms:
+    - Routing Version
+  - name: CUSTOMER_ORDER_ID
+    display_name: Customer Order ID
+    datatype: string
+    business_description: Identifier of the customer sales order linked to this work order, if any.
+    synonyms:
+    - Customer Order ID
+    - Sales Order Number
+  - name: IS_RELEASED
+    display_name: Is Released
+    datatype: boolean
+    business_description: Indicates whether the work order has been released to production.
+    synonyms:
+    - Is Released
+    - Release Flag
+  - name: RELEASED_DATE
+    display_name: Released Date
+    datatype: date
+    business_description: Date the work order was released to production.
+    synonyms:
+    - Released Date
+  - name: RELEASED_BY
+    display_name: Released By
+    datatype: string
+    business_description: Person who released the work order to production.
+    synonyms:
+    - Released By
+  - name: CREATED_AT
+    display_name: Created At
+    datatype: timestamp
+    business_description: Timestamp when the record was first created.
+    synonyms:
+    - Created Date
+    - Creation Time
+    - Insert Date
+  - name: UPDATED_AT
+    display_name: Updated At
+    datatype: timestamp
+    business_description: Timestamp when the record was last updated.
+    synonyms:
+    - Last Updated
+    - Modified Date
+    - Refresh Time
+  measures:
+  - PLANNED_QTY
+  - COMPLETED_QTY
+  - SCRAPPED_QTY
+  dimensions:
+  - PLANT_ID
+  - PRODUCT_ID
+  - WORK_ORDER_TYPE
+  - WORK_ORDER_STATUS
+  - PLANNED_START_DATE
+  sample_questions:
+  - How many work orders are currently released but not started?
+  - Show completed quantity vs planned quantity by plant.
+  - Which work orders are scheduled to start next week?

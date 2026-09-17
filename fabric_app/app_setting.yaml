@@ -1,0 +1,129 @@
+# =============================================================================
+# app_settings.yaml
+# Single source of truth for every tunable that was previously hard-coded
+# in Python files.  Edit this file instead of touching source code.
+#
+# Requirements addressed: 10, 11, 12, 13, 15
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Microsoft Fabric connection coordinates
+# Actual secret values (passwords/keys) must live in Azure Key Vault or .env.
+# Only non-secret defaults are stored here.
+# ---------------------------------------------------------------------------
+fabric:
+  sql_server: "xbliiy2dqnee5hv6j5optimzpu-z3vxoljxk4mejfcxmerqnjxd4q.datawarehouse.fabric.microsoft.com"                           # Override via FABRIC_SQL_SERVER env / Key Vault
+  database: "ReadyToBuild"
+  warehouse_database: "ReadyToBuild"
+  schema: "information_mart"
+  #warehouse_schema: "dbo"
+  default_schema: "dbo"
+
+# ---------------------------------------------------------------------------
+# Azure region & deployment metadata (req 12)
+# Helps developers understand where resources live.
+# ---------------------------------------------------------------------------
+azure:
+  region: "eastus"                         # Azure region for all resources
+  resource_group: "rg-procurespendiq"
+  subscription_id: ""                      # Set via env if needed
+
+# ---------------------------------------------------------------------------
+# AI model configuration (req 13)
+# ---------------------------------------------------------------------------
+ai:
+  deployment: "gpt-4.1"                   # Azure OpenAI deployment name
+  api_version: "2024-08-01-preview"
+  sql_generation_temperature: 0.1          # Lower = more deterministic SQL
+  insights_temperature: 0.3
+  yaml_generation_temperature: 0.2
+  max_tokens: 4096
+  cache_first: true                        # Check session cache before calling AI
+
+# ---------------------------------------------------------------------------
+# Caching (req 3, 8)
+# ---------------------------------------------------------------------------
+cache:
+  enabled: true
+  ttl_seconds: 3600                        # 1 hour default TTL for cached results
+  max_result_rows: 5000                    # Rows above this are not cached
+  session_cache_table: "information_mart.query_result_cache"
+  similarity_threshold: 0.95              # Cosine similarity to treat as a cache hit
+
+# ---------------------------------------------------------------------------
+# Session management (req 14)
+# ---------------------------------------------------------------------------
+session:
+  idle_timeout_seconds: 300               # 5 minutes before auto-suspend warning
+  idle_warning_seconds: 60               # Warn 60 s before auto-suspend
+
+# ---------------------------------------------------------------------------
+# UI strings - nothing hard-coded in Python (req 10)
+# ---------------------------------------------------------------------------
+ui:
+  app_title: "ReadyToBuild Analytics"
+  brand_name: "ReadyToBuild"
+  page_icon_url: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Yash_Technologies_logo.png"
+  default_bg_color: "#FBF9F4"
+  support_email: "support@yashtechnologies.com"
+  region: "eastus"
+  date_format: "%Y-%m-%d"
+  currency_symbol: "$"
+  max_chart_rows: 100
+  genie_history_count: 10
+  saved_insights_count: 20
+
+# ---------------------------------------------------------------------------
+# Metadata / schema file (req 15 - configurable)
+# ---------------------------------------------------------------------------
+metadata:
+  schema_file: "schema_model.yaml"
+  auto_update_on_new_table: true          # Trigger AI YAML enrichment automatically
+
+# ---------------------------------------------------------------------------
+# Data Vault naming conventions (req 5, 7, 11)
+# Shared across Microsoft Fabric, SQL generation, and YAML.
+# ---------------------------------------------------------------------------
+data_vault:
+  hub_prefix: "h_"
+  sat_prefix: "s_"
+  link_prefix: "l_"
+  bridge_prefix: "BRG_"
+  pit_prefix: "PIT_"                      # Point-in-Time table prefix
+  raw_vault_schema: "raw_vault"
+  business_vault_schema: "business_vault"
+  information_mart_schema: "information_mart"
+
+# ---------------------------------------------------------------------------
+# Table naming conventions (req 11)
+# Same prefixes must be used in all environments (Fabric, local, test).
+# ---------------------------------------------------------------------------
+naming_conventions:
+  view_suffix: "_vw"
+  table_suffix: "_dt"
+  history_table: "genie_question_history"
+  saved_insights_table: "saved_insights"
+  cache_table: "query_result_cache"
+
+# ---------------------------------------------------------------------------
+# Feature flags
+# ---------------------------------------------------------------------------
+features:
+  genie_history: true
+  insights_save: true
+  data_vault_ai: true             # AI-driven Data Vault object generation (req 7)
+  auto_yaml_update: true          # Auto-update YAML when a new table is detected (req 4)
+  performance_testing: true       # Enable performance benchmarking (req 9)
+  integration_testing: true       # Enable integration test suite (req 9)
+  data_validation: true           # Enable automated data validation (req 6)
+
+# ---------------------------------------------------------------------------
+# Performance & integration testing thresholds (req 9)
+# ---------------------------------------------------------------------------
+testing:
+  query_timeout_seconds: 30
+  max_acceptable_latency_ms: 5000
+  min_row_count_sanity: 1         # Minimum expected rows for non-empty tables
+  integration_db_check: true
+  integration_ai_check: true
+  integration_cache_check: true
