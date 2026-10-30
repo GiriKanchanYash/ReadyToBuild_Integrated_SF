@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import HTTPException
 from snowflake.connector.errors import ProgrammingError
+from app.db import SnowflakeConfigError
 from app.routers import ctb, ai, auth, transfer
 
 
@@ -77,6 +78,13 @@ async def handle_snowflake_programming_error(_request, exc: ProgrammingError):
             },
         )
     return JSONResponse(status_code=500, content={"detail": msg})
+
+
+@app.exception_handler(SnowflakeConfigError)
+async def handle_snowflake_config_error(_request, exc: SnowflakeConfigError):
+    # Missing/malformed Snowflake key-pair settings. Scoped to the Snowflake
+    # source only; Fabric errors are not affected by this handler.
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.get("/health")
